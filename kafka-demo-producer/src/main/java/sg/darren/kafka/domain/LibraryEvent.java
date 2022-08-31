@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class LibraryEvent {
 
-    private Integer id;
+    private Long id;
     private Book book;
 
 }

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class Book {
 
-    private Integer id;
+    private Long id;
     private String name;
     private String author;
 
