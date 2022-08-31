@@ -1,7 +1,7 @@
-package com.darren.kafka.controller;
+package sg.darren.kafka.controller;
 
-import com.darren.kafka.domain.LibraryEvent;
-import com.darren.kafka.producer.LibraryEventProducer;
+import sg.darren.kafka.domain.LibraryEvent;
+import sg.darren.kafka.producer.LibraryEventProducer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

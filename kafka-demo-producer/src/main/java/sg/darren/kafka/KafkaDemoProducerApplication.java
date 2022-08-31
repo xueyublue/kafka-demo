@@ -1,4 +1,4 @@
-package com.darren.kafka;
+package sg.darren.kafka;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

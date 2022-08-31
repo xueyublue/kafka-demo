@@ -1,4 +1,4 @@
-package com.darren.kafka.config;
+package sg.darren.kafka.config;
 
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.context.annotation.Bean;
