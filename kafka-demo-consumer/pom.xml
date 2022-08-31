@@ -8,14 +8,17 @@
 		<version>2.7.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
+
 	<groupId>sg.darren</groupId>
 	<artifactId>kafka-demo-consumer</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>kafka-demo-consumer</name>
 	<description>Demo project for Kafka Consumer</description>
+
 	<properties>
 		<java.version>1.8</java.version>
 	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -25,7 +28,6 @@
 			<groupId>org.springframework.kafka</groupId>
 			<artifactId>spring-kafka</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
@@ -36,6 +38,7 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
