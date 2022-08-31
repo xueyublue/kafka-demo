@@ -27,7 +27,7 @@ class LibraryEventControllerUnitTest {
     @MockBean
     private LibraryEventProducer libraryEventProducer;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void postLibraryEvent() throws Exception {
