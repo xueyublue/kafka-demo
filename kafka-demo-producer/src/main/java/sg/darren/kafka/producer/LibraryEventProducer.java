@@ -45,7 +45,7 @@ public class LibraryEventProducer {
         });
     }
 
-    public void sendLibraryEvent2(LibraryEvent libraryEvent) throws JsonProcessingException {
+    public ListenableFuture<SendResult<Long, String>> sendLibraryEvent2(LibraryEvent libraryEvent) throws JsonProcessingException {
         Long key = libraryEvent.getId();
         String value = objectMapper.writeValueAsString(libraryEvent);
         ProducerRecord<Long, String> pr = buildProducerRecord(key, value, "library-events");
@@ -61,6 +61,7 @@ public class LibraryEventProducer {
                 handleSuccess(key, value, result);
             }
         });
+        return listenableFuture;
     }
 
     public SendResult<Long, String> sendLibraryEventSynchronous(LibraryEvent libraryEvent)
