@@ -32,13 +32,14 @@ class LibraryEventControllerUnitTest {
     @Test
     void postLibraryEvent() throws Exception {
         // given
+        Book b = Book.builder()
+                .id(new Date().getTime())
+                .name("Kafka Crash Course")
+                .author("Udemy")
+                .build();
         LibraryEvent le = LibraryEvent.builder()
                 .id(null)
-                .book(Book.builder()
-                        .id(new Date().getTime())
-                        .name("Kafka Crash Course")
-                        .author("Udemy")
-                        .build())
+                .book(b)
                 .build();
         String json = objectMapper.writeValueAsString(le);
         Mockito.doNothing()

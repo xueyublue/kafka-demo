@@ -12,6 +12,7 @@ import sg.darren.kafka.domain.LibraryEvent;
 import sg.darren.kafka.domain.LibraryEventType;
 import sg.darren.kafka.producer.LibraryEventProducer;
 
+import javax.validation.Valid;
 import java.util.Date;
 
 @RestController
@@ -21,7 +22,7 @@ public class LibraryEventController {
     private final LibraryEventProducer libraryEventProducer;
 
     @PostMapping("/v1/library-event")
-    public ResponseEntity<LibraryEvent> postLibraryEvent(@RequestBody LibraryEvent libraryEvent) throws JsonProcessingException {
+    public ResponseEntity<LibraryEvent> postLibraryEvent(@RequestBody @Valid LibraryEvent libraryEvent) throws JsonProcessingException {
         libraryEvent.setId(new Date().getTime());
         libraryEvent.setLibraryEventType(LibraryEventType.NEW);
         libraryEventProducer.sendLibraryEvent2(libraryEvent);
