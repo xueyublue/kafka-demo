@@ -1,6 +1,5 @@
 package sg.darren.kafka.producer;
 
-import sg.darren.kafka.domain.LibraryEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +9,11 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
+import sg.darren.kafka.domain.LibraryEvent;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Component
 @Slf4j
@@ -34,6 +38,21 @@ public class LibraryEventProducer {
                 handleSuccess(key, value, result);
             }
         });
+    }
+
+    public SendResult<Integer, String> sendLibraryEventSynchronous(LibraryEvent libraryEvent)
+            throws ExecutionException, InterruptedException, JsonProcessingException, TimeoutException {
+        Integer key = libraryEvent.getId();
+        String value = objectMapper.writeValueAsString(libraryEvent);
+        SendResult<Integer, String> sendResult = null;
+        try {
+            sendResult = kafkaTemplate.sendDefault(key, value).get(10, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            e.printStackTrace();
+            throw e;
+        }
+        log.info("Message sent successfully. {}", sendResult);
+        return sendResult;
     }
 
     private void handleFailure(Integer key, String value, Throwable ex) {
