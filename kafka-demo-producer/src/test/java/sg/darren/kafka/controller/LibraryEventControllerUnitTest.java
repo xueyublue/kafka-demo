@@ -46,15 +46,33 @@ class LibraryEventControllerUnitTest {
                 .when(libraryEventProducer)
                 .sendLibraryEvent2(Mockito.isA(LibraryEvent.class));
 
-        // when
+        // expect
         mockMvc.perform(
                         MockMvcRequestBuilders.post("/v1/library-event")
                                 .content(json)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isCreated());
+    }
 
-        // then
+    @Test
+    void postLibraryEvent_4xx() throws Exception {
+        // given
+        LibraryEvent le = LibraryEvent.builder()
+                .id(null)
+                .book(null)
+                .build();
+        String json = objectMapper.writeValueAsString(le);
+        Mockito.doNothing()
+                .when(libraryEventProducer)
+                .sendLibraryEvent2(Mockito.isA(LibraryEvent.class));
 
+        // expect
+        mockMvc.perform(
+                        MockMvcRequestBuilders.post("/v1/library-event")
+                                .content(json)
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().is4xxClientError())
+                .andExpect(MockMvcResultMatchers.content().string("book - must not be null"));
     }
 
 }
