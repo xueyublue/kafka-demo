@@ -41,7 +41,9 @@ class LibraryEventControllerUnitTest {
                         .build())
                 .build();
         String json = objectMapper.writeValueAsString(le);
-        Mockito.doNothing().when(libraryEventProducer).sendLibraryEvent2(Mockito.isA(LibraryEvent.class));
+        Mockito.doNothing()
+                .when(libraryEventProducer)
+                .sendLibraryEvent2(Mockito.isA(LibraryEvent.class));
 
         // when
         mockMvc.perform(
