@@ -7,7 +7,7 @@ server:
 spring:
   profiles: local
   kafka:
-    producer:
+    consumer:
       bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
       key-serializer: org.apache.kafka.common.serialization.LongSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -16,7 +16,7 @@ spring:
 spring:
   profiles: dev
   kafka:
-    producer:
+    consumer:
       bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
       key-serializer: org.apache.kafka.common.serialization.LongSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -25,7 +25,7 @@ spring:
 spring:
   profiles: prod
   kafka:
-    producer:
+    consumer:
       bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
       key-serializer: org.apache.kafka.common.serialization.LongSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
