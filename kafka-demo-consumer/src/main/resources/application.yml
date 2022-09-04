@@ -12,6 +12,16 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.LongSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       group-id: library-events-listener-group
+  datasource:
+    url: jdbc:h2:mem:demo
+    driver: org.h2.Driver
+  jpa:
+    database: h2
+    database-platform: org.hibernate.dialect.H2Dialect
+    generate-ddl: true
+  h2:
+    console: 
+      enabled: true
 ---
 spring:
   profiles: dev
