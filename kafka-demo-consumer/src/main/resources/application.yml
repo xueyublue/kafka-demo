@@ -8,7 +8,7 @@ spring:
   profiles: local
   kafka:
     consumer:
-      bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
+      bootstrap-servers: localhost:9092
       key-serializer: org.apache.kafka.common.serialization.LongSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       group-id: library-events-listener-group
