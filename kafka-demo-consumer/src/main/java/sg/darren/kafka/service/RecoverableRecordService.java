@@ -1,6 +1,5 @@
 package sg.darren.kafka.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -12,7 +11,7 @@ import sg.darren.kafka.repository.FailureRecordRepository;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class FailureRecordService {
+public class RecoverableRecordService {
 
     private final FailureRecordRepository failureRecordRepository;
 

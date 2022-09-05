@@ -18,7 +18,7 @@ import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
 import sg.darren.kafka.entity.RecoverableStatus;
-import sg.darren.kafka.service.FailureRecordService;
+import sg.darren.kafka.service.RecoverableRecordService;
 
 import java.util.Collections;
 
@@ -31,7 +31,7 @@ public class LibraryEventsConsumerConfig {
     private KafkaTemplate<Long, String> kafkaTemplate;
 
     @Autowired
-    private FailureRecordService failureRecordService;
+    private RecoverableRecordService recoverableRecordService;
 
     @Value("${topics.retry}")
     private String retryTopic;
@@ -77,9 +77,9 @@ public class LibraryEventsConsumerConfig {
         return errorHandler;
     }
 
-    public DeadLetterPublishingRecoverer publishingRecoverer() {
+    private DeadLetterPublishingRecoverer publishingRecoverer() {
         return new DeadLetterPublishingRecoverer(kafkaTemplate, (r, e) -> {
-            log.error("Exception in publishingRecoverer(): {}", e.getMessage());
+            log.error("### Exception in publishingRecoverer(): {}", e.getMessage());
             if (e.getCause() instanceof RecoverableDataAccessException) {
                 return new TopicPartition(retryTopic, r.partition());
             } else {
@@ -88,12 +88,12 @@ public class LibraryEventsConsumerConfig {
         });
     }
 
-    ConsumerRecordRecoverer consumerRecordRecoverer = (consumerRecord, e) -> {
-        log.error("Exception in consumerRecordRecoverer(): {}", e.getMessage());
+    private ConsumerRecordRecoverer consumerRecordRecoverer = (consumerRecord, e) -> {
+        log.error("### Exception in consumerRecordRecoverer(): {}", e.getMessage());
         if (e.getCause() instanceof RecoverableDataAccessException) {
-            failureRecordService.saveRecoverableRecord((ConsumerRecord<Long, String>) consumerRecord, e, RecoverableStatus.RETRY);
+            recoverableRecordService.saveRecoverableRecord((ConsumerRecord<Long, String>) consumerRecord, e, RecoverableStatus.RETRY);
         } else {
-            failureRecordService.saveRecoverableRecord((ConsumerRecord<Long, String>) consumerRecord, e, RecoverableStatus.NO_RETRY);
+            recoverableRecordService.saveRecoverableRecord((ConsumerRecord<Long, String>) consumerRecord, e, RecoverableStatus.NO_RETRY);
         }
     };
 
