@@ -15,7 +15,7 @@ public class LibraryEventsConsumer {
 
     private final LibraryEventsService libraryEventsService;
 
-    @KafkaListener(topics = {"library-events"}, groupId = "library-events-listener-group")
+    @KafkaListener(topics = {"${topics.main}"}, groupId = "library-events-listener-group")
     public void onMessage(ConsumerRecord<Long, String> consumerRecord) throws JsonProcessingException {
         log.info("Received: {}", consumerRecord);
         libraryEventsService.processLibraryEvent(consumerRecord);

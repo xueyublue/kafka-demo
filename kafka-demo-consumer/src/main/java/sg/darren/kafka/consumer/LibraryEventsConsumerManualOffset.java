@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LibraryEventsConsumerManualOffset implements AcknowledgingMessageListener<Long, String> {
 
 	@Override
-	@KafkaListener(topics = { "library-events" })
+	@KafkaListener(topics = { "${topics.main}" })
 	public void onMessage(ConsumerRecord<Long, String> consumerRecord, Acknowledgment acknowledgment) {
 		log.info("Received - Manual ACK: {}", consumerRecord);
 		acknowledgment.acknowledge();
