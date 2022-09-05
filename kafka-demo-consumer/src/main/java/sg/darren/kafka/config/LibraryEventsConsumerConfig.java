@@ -1,9 +1,11 @@
 package sg.darren.kafka.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.ConcurrentKafkaListenerContainerFactoryConfigurer;
 import org.springframework.context.annotation.Bean;
@@ -14,9 +16,11 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.ConsumerRecordRecoverer;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
+import sg.darren.kafka.service.FailureRecordService;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,6 +30,9 @@ import java.util.Map;
 @EnableKafka
 @Slf4j
 public class LibraryEventsConsumerConfig {
+
+    @Autowired
+    private FailureRecordService failureRecordService;
 
     public KafkaTemplate<String, String> kafkaTemplate() {
         Map<String, Object> configProps = new HashMap<>();
@@ -63,7 +70,11 @@ public class LibraryEventsConsumerConfig {
 //		exponentialBackOffWithMaxRetries.setMultiplier(2.0);
 //		exponentialBackOffWithMaxRetries.setMaxInterval(2_000L);
 
-        DefaultErrorHandler errorHandler = new DefaultErrorHandler(publishingRecoverer(), fixedBackOff);
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(
+//                publishingRecoverer(),
+                consumerRecordRecoverer,
+                fixedBackOff
+        );
 
         Collections.singletonList(IllegalArgumentException.class)
                 .forEach(errorHandler::addNotRetryableExceptions);
@@ -78,6 +89,7 @@ public class LibraryEventsConsumerConfig {
 
     public DeadLetterPublishingRecoverer publishingRecoverer() {
         return new DeadLetterPublishingRecoverer(kafkaTemplate(), (r, e) -> {
+            log.error("Exception in publishingRecoverer(): {}", e.getMessage());
             if (e.getCause() instanceof RecoverableDataAccessException) {
                 return new TopicPartition(retryTopic, r.partition());
             } else {
@@ -85,5 +97,14 @@ public class LibraryEventsConsumerConfig {
             }
         });
     }
+
+    ConsumerRecordRecoverer consumerRecordRecoverer = (consumerRecord, e) -> {
+        log.error("Exception in consumerRecordRecoverer(): {}", e.getMessage());
+        if (e.getCause() instanceof RecoverableDataAccessException) {
+            failureRecordService.saveFailureRecord((ConsumerRecord<String, String>) consumerRecord, e, "RETRY");
+        } else {
+            failureRecordService.saveFailureRecord((ConsumerRecord<String, String>) consumerRecord, e, "DEAD");
+        }
+    };
 
 }
