@@ -1,11 +1,11 @@
 package sg.darren.kafka.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.stereotype.Service;
 import sg.darren.kafka.entity.LibraryEvent;
 import sg.darren.kafka.repository.LibraryEventsRepository;
@@ -21,9 +21,13 @@ public class LibraryEventsService {
     private final LibraryEventsRepository libraryEventsRepository;
 
     public void processLibraryEvent(ConsumerRecord<Long, String> consumerRecord)
-            throws JsonMappingException, JsonProcessingException {
+            throws JsonProcessingException {
         LibraryEvent le = objectMapper.readValue(consumerRecord.value(), LibraryEvent.class);
         log.info("{}", le);
+
+        if (le != null && le.getId() != null && le.getId() == 999) {
+            throw new RecoverableDataAccessException("Temporary network issue.");
+        }
 
         switch (le.getLibraryEventType()) {
             case NEW:
