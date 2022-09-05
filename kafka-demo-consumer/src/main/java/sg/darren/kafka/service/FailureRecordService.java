@@ -14,7 +14,6 @@ import sg.darren.kafka.repository.FailureRecordRepository;
 @Slf4j
 public class FailureRecordService {
 
-    private final ObjectMapper objectMapper;
     private final FailureRecordRepository failureRecordRepository;
 
     public void saveRecoverableRecord(ConsumerRecord<Long, String> consumerRecord, Exception ex, RecoverableStatus status) {
