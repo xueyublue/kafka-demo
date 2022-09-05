@@ -86,7 +86,7 @@ class LibraryEventsConsumerIntegrationTest {
     }
 
     @Test
-    void pushLibraryEvent_New() throws ExecutionException, InterruptedException, JsonProcessingException {
+    void newLibraryEvent() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         Book b = Book.builder()
                 .id(Long.parseLong("1"))
@@ -117,7 +117,7 @@ class LibraryEventsConsumerIntegrationTest {
     }
 
     @Test
-    void pushLibraryEvent_Update() throws ExecutionException, InterruptedException, JsonProcessingException {
+    void updateLibraryEvent() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         // - insert
         Book b = Book.builder()
@@ -153,7 +153,7 @@ class LibraryEventsConsumerIntegrationTest {
     }
 
     @Test
-    void pushLibraryEvent_null_LibraryEventId() throws ExecutionException, InterruptedException, JsonProcessingException {
+    void updateLibraryEvent_null_LibraryEventId() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         Book b = Book.builder()
                 .id(Long.parseLong("1"))
@@ -180,7 +180,7 @@ class LibraryEventsConsumerIntegrationTest {
     }
 
     @Test
-    void pushLibraryEvent_999_LibraryEventId() throws ExecutionException, InterruptedException, JsonProcessingException {
+    void updateLibraryEvent_999_LibraryEventId() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         Book b = Book.builder()
                 .id(Long.parseLong("1"))
