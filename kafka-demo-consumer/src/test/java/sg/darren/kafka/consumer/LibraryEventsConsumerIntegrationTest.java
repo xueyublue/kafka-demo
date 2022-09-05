@@ -69,7 +69,7 @@ class LibraryEventsConsumerIntegrationTest {
     }
 
     @Test
-    void pushNewLibraryEvent() throws ExecutionException, InterruptedException, JsonProcessingException {
+    void pushLibraryEvent_New() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         Book b = Book.builder()
                 .id(Long.parseLong("1"))
@@ -100,7 +100,7 @@ class LibraryEventsConsumerIntegrationTest {
     }
 
     @Test
-    void pushUpdateLibraryEvent() throws ExecutionException, InterruptedException, JsonProcessingException {
+    void pushLibraryEvent_Update() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         // - insert
         Book b = Book.builder()
@@ -131,11 +131,6 @@ class LibraryEventsConsumerIntegrationTest {
         latch.await(3, TimeUnit.SECONDS);
 
         // then
-        Mockito.verify(libraryEventsConsumer, Mockito.times(1))
-                .onMessage(Mockito.isA(ConsumerRecord.class));
-        Mockito.verify(libraryEventsService, Mockito.times(1))
-                .processLibraryEvent(Mockito.isA(ConsumerRecord.class));
-
         LibraryEvent dbLe = libraryEventsRepository.findById(le.getId()).get();
         Assertions.assertEquals("Kafka Crash Course 2.X", dbLe.getBook().getName());
     }
