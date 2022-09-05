@@ -99,4 +99,45 @@ class LibraryEventsConsumerIntegrationTest {
         Assertions.assertEquals(1, list.get(0).getBook().getId());
     }
 
+    @Test
+    void pushUpdateLibraryEvent() throws ExecutionException, InterruptedException, JsonProcessingException {
+        // given
+        // - insert
+        Book b = Book.builder()
+                .id(Long.parseLong("1"))
+                .name("Kafka Crash Course")
+                .author("Udemy")
+                .build();
+        LibraryEvent le = LibraryEvent.builder()
+                .id(null)
+                .libraryEventType(LibraryEventType.NEW)
+                .book(b)
+                .build();
+        b.setLibraryEvent(le);
+        libraryEventsRepository.save(le);
+        // - update
+        Book b2 = Book.builder()
+                .id(Long.parseLong("1"))
+                .name("Kafka Crash Course 2.X")
+                .author("Udemy")
+                .build();
+        le.setBook(b2);
+        le.setLibraryEventType(LibraryEventType.UPDATE);
+        String json = objectMapper.writeValueAsString(le);
+        kafkaTemplate.sendDefault(json).get();
+
+        // when
+        CountDownLatch latch = new CountDownLatch(1);
+        latch.await(3, TimeUnit.SECONDS);
+
+        // then
+        Mockito.verify(libraryEventsConsumer, Mockito.times(1))
+                .onMessage(Mockito.isA(ConsumerRecord.class));
+        Mockito.verify(libraryEventsService, Mockito.times(1))
+                .processLibraryEvent(Mockito.isA(ConsumerRecord.class));
+
+        LibraryEvent dbLe = libraryEventsRepository.findById(le.getId()).get();
+        Assertions.assertEquals("Kafka Crash Course 2.X", dbLe.getBook().getName());
+    }
+
 }
