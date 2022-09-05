@@ -61,8 +61,8 @@ public class LibraryEventsConsumerConfig {
 //		exponentialBackOffWithMaxRetries.setMaxInterval(2_000L);
 
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(
-//                publishingRecoverer(),
-                consumerRecordRecoverer,
+                publishingRecoverer(),
+//                consumerRecordRecoverer,
                 fixedBackOff
         );
 
