@@ -24,7 +24,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class LibraryEventsConsumerConfig {
 
-    private final KafkaTemplate<Long, String> kafkaTemplate;
+    private final KafkaTemplate<Object, Object> kafkaTemplate;
 
     @Value("${topics.retry}")
     private String retryTopic;
@@ -53,7 +53,7 @@ public class LibraryEventsConsumerConfig {
 //		exponentialBackOffWithMaxRetries.setMultiplier(2.0);
 //		exponentialBackOffWithMaxRetries.setMaxInterval(2_000L);
 
-        DefaultErrorHandler errorHandler = new DefaultErrorHandler(publishingRecoverer(), fixedBackOff);
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(fixedBackOff);
 
         Collections.singletonList(IllegalArgumentException.class)
                 .forEach(errorHandler::addNotRetryableExceptions);
@@ -66,14 +66,14 @@ public class LibraryEventsConsumerConfig {
         return errorHandler;
     }
 
-    public DeadLetterPublishingRecoverer publishingRecoverer() {
-        return new DeadLetterPublishingRecoverer(kafkaTemplate, (r, e) -> {
-            if (e.getCause() instanceof RecoverableDataAccessException) {
-                return new TopicPartition(retryTopic, r.partition());
-            } else {
-                return new TopicPartition(deadLetterTopic, r.partition());
-            }
-        });
-    }
+//    public DeadLetterPublishingRecoverer publishingRecoverer() {
+//        return new DeadLetterPublishingRecoverer(kafkaTemplate, (r, e) -> {
+//            if (e.getCause() instanceof RecoverableDataAccessException) {
+//                return new TopicPartition(retryTopic, r.partition());
+//            } else {
+//                return new TopicPartition(deadLetterTopic, r.partition());
+//            }
+//        });
+//    }
 
 }
