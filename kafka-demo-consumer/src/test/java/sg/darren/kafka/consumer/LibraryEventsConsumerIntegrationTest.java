@@ -135,4 +135,31 @@ class LibraryEventsConsumerIntegrationTest {
         Assertions.assertEquals("Kafka Crash Course 2.X", dbLe.getBook().getName());
     }
 
+    @Test
+    void pushLibraryEvent_null_LibraryEventId() throws ExecutionException, InterruptedException, JsonProcessingException {
+        // given
+        Book b = Book.builder()
+                .id(Long.parseLong("1"))
+                .name("Kafka Crash Course")
+                .author("Udemy")
+                .build();
+        LibraryEvent le = LibraryEvent.builder()
+                .id(null)
+                .libraryEventType(LibraryEventType.UPDATE)
+                .book(b)
+                .build();
+        String json = objectMapper.writeValueAsString(le);
+        kafkaTemplate.sendDefault(json).get();
+
+        // when
+        CountDownLatch latch = new CountDownLatch(1);
+        latch.await(5, TimeUnit.SECONDS);
+
+        // then
+        Mockito.verify(libraryEventsConsumer, Mockito.times(10))
+                .onMessage(Mockito.isA(ConsumerRecord.class));
+        Mockito.verify(libraryEventsService, Mockito.times(10))
+                .processLibraryEvent(Mockito.isA(ConsumerRecord.class));
+    }
+
 }
