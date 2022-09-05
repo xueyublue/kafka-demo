@@ -5,7 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.stereotype.Service;
-import sg.darren.kafka.entity.FailureRecord;
+import sg.darren.kafka.entity.RecoverableStatus;
+import sg.darren.kafka.entity.RecoverableRecord;
 import sg.darren.kafka.repository.FailureRecordRepository;
 
 @Service
@@ -16,18 +17,18 @@ public class FailureRecordService {
     private final ObjectMapper objectMapper;
     private final FailureRecordRepository failureRecordRepository;
 
-    public void saveFailureRecord(ConsumerRecord<String, String> consumerRecord, Exception e, String status) {
-        FailureRecord fr = FailureRecord.builder()
+    public void saveRecoverableRecord(ConsumerRecord<Long, String> consumerRecord, Exception ex, RecoverableStatus status) {
+        RecoverableRecord rr = RecoverableRecord.builder()
                 .id(null)
                 .topic(consumerRecord.topic())
                 .key(consumerRecord.key())
-                .errorRecord(consumerRecord.value())
+                .value(consumerRecord.value())
                 .partition(consumerRecord.partition())
-                .offset_value(consumerRecord.offset())
-                .exception(e.getCause().getMessage())
+                .offset(consumerRecord.offset())
+                .exception(ex.getCause().getMessage())
                 .status(status)
                 .build();
-        log.info("FailureRecord: {}", fr);
-        failureRecordRepository.save(fr);
+        failureRecordRepository.save(rr);
+        log.info("Saved RecoverableRecord with status {}: {}", status, rr);
     }
 }

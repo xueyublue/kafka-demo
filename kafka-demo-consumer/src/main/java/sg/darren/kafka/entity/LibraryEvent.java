@@ -9,7 +9,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Data
 @Builder
-@Entity
+@Entity(name = "library_event")
 public class LibraryEvent {
 
 	@Id

@@ -2,9 +2,7 @@ package sg.darren.kafka.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.ConcurrentKafkaListenerContainerFactoryConfigurer;
@@ -14,17 +12,15 @@ import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.ConsumerRecordRecoverer;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
+import sg.darren.kafka.entity.RecoverableStatus;
 import sg.darren.kafka.service.FailureRecordService;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 @Configuration
 @EnableKafka
@@ -32,16 +28,10 @@ import java.util.Map;
 public class LibraryEventsConsumerConfig {
 
     @Autowired
-    private FailureRecordService failureRecordService;
+    private KafkaTemplate<Long, String> kafkaTemplate;
 
-    public KafkaTemplate<String, String> kafkaTemplate() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        DefaultKafkaProducerFactory producerFactory = new DefaultKafkaProducerFactory<>(configProps);
-        return new KafkaTemplate<>(producerFactory);
-    }
+    @Autowired
+    private FailureRecordService failureRecordService;
 
     @Value("${topics.retry}")
     private String retryTopic;
@@ -88,7 +78,7 @@ public class LibraryEventsConsumerConfig {
     }
 
     public DeadLetterPublishingRecoverer publishingRecoverer() {
-        return new DeadLetterPublishingRecoverer(kafkaTemplate(), (r, e) -> {
+        return new DeadLetterPublishingRecoverer(kafkaTemplate, (r, e) -> {
             log.error("Exception in publishingRecoverer(): {}", e.getMessage());
             if (e.getCause() instanceof RecoverableDataAccessException) {
                 return new TopicPartition(retryTopic, r.partition());
@@ -101,9 +91,9 @@ public class LibraryEventsConsumerConfig {
     ConsumerRecordRecoverer consumerRecordRecoverer = (consumerRecord, e) -> {
         log.error("Exception in consumerRecordRecoverer(): {}", e.getMessage());
         if (e.getCause() instanceof RecoverableDataAccessException) {
-            failureRecordService.saveFailureRecord((ConsumerRecord<String, String>) consumerRecord, e, "RETRY");
+            failureRecordService.saveRecoverableRecord((ConsumerRecord<Long, String>) consumerRecord, e, RecoverableStatus.RETRY);
         } else {
-            failureRecordService.saveFailureRecord((ConsumerRecord<String, String>) consumerRecord, e, "DEAD");
+            failureRecordService.saveRecoverableRecord((ConsumerRecord<Long, String>) consumerRecord, e, RecoverableStatus.NO_RETRY);
         }
     };
 
