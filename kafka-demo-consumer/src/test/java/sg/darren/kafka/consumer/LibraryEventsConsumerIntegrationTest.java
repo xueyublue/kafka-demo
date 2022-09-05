@@ -156,9 +156,9 @@ class LibraryEventsConsumerIntegrationTest {
         latch.await(5, TimeUnit.SECONDS);
 
         // then
-        Mockito.verify(libraryEventsConsumer, Mockito.times(10))
+        Mockito.verify(libraryEventsConsumer, Mockito.times(3))
                 .onMessage(Mockito.isA(ConsumerRecord.class));
-        Mockito.verify(libraryEventsService, Mockito.times(10))
+        Mockito.verify(libraryEventsService, Mockito.times(3))
                 .processLibraryEvent(Mockito.isA(ConsumerRecord.class));
     }
 
