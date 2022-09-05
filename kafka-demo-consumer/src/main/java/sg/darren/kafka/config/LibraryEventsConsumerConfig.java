@@ -53,27 +53,27 @@ public class LibraryEventsConsumerConfig {
 //		exponentialBackOffWithMaxRetries.setMultiplier(2.0);
 //		exponentialBackOffWithMaxRetries.setMaxInterval(2_000L);
 
-        DefaultErrorHandler errorHandler = new DefaultErrorHandler(fixedBackOff);
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(publishingRecoverer(), fixedBackOff);
 
         Collections.singletonList(IllegalArgumentException.class)
                 .forEach(errorHandler::addNotRetryableExceptions);
 
-//		Collections.singletonList(RecoverableDataAccessException.class)
-//				.forEach(errorHandler::addRetryableExceptions);
+		Collections.singletonList(RecoverableDataAccessException.class)
+				.forEach(errorHandler::addRetryableExceptions);
 
         errorHandler.setRetryListeners((record, ex, deliveryAttempt)
                 -> log.info("Failed record in RetryListener, Exception: {}, deliveryAttempt: {}", ex.getMessage(), deliveryAttempt));
         return errorHandler;
     }
 
-//    public DeadLetterPublishingRecoverer publishingRecoverer() {
-//        return new DeadLetterPublishingRecoverer(kafkaTemplate, (r, e) -> {
-//            if (e.getCause() instanceof RecoverableDataAccessException) {
-//                return new TopicPartition(retryTopic, r.partition());
-//            } else {
-//                return new TopicPartition(deadLetterTopic, r.partition());
-//            }
-//        });
-//    }
+    public DeadLetterPublishingRecoverer publishingRecoverer() {
+        return new DeadLetterPublishingRecoverer(kafkaTemplate, (r, e) -> {
+            if (e.getCause() instanceof RecoverableDataAccessException) {
+                return new TopicPartition(retryTopic, r.partition());
+            } else {
+                return new TopicPartition(deadLetterTopic, r.partition());
+            }
+        });
+    }
 
 }
