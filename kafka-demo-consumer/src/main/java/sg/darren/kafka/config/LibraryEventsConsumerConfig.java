@@ -9,6 +9,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.support.ExponentialBackOffWithMaxRetries;
 import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.Arrays;
@@ -34,13 +35,19 @@ public class LibraryEventsConsumerConfig {
     private DefaultErrorHandler errorHandler() {
 
         FixedBackOff fixedBackOff = new FixedBackOff(1000L, 2);
-        DefaultErrorHandler errorHandler = new DefaultErrorHandler(fixedBackOff);
+
+//		ExponentialBackOffWithMaxRetries exponentialBackOffWithMaxRetries = new ExponentialBackOffWithMaxRetries(2);
+//		exponentialBackOffWithMaxRetries.setInitialInterval(1_000L);
+//		exponentialBackOffWithMaxRetries.setMultiplier(2.0);
+//		exponentialBackOffWithMaxRetries.setMaxInterval(2_000L);
+
+		DefaultErrorHandler errorHandler = new DefaultErrorHandler(fixedBackOff);
 
 		Collections.singletonList(IllegalArgumentException.class)
 				.forEach(errorHandler::addNotRetryableExceptions);
 
-		Collections.singletonList(RecoverableDataAccessException.class)
-				.forEach(errorHandler::addRetryableExceptions);
+//		Collections.singletonList(RecoverableDataAccessException.class)
+//				.forEach(errorHandler::addRetryableExceptions);
 
         errorHandler.setRetryListeners((record, ex, deliveryAttempt)
                 -> log.info("Failed record in RetryListener, Exception: {}, deliveryAttempt: {}", ex.getMessage(), deliveryAttempt));
