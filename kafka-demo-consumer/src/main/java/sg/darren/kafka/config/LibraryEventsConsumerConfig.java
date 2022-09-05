@@ -1,6 +1,9 @@
 package sg.darren.kafka.config;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.TopicPartition;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.ConcurrentKafkaListenerContainerFactoryConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,17 +11,26 @@ import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
-import org.springframework.kafka.support.ExponentialBackOffWithMaxRetries;
 import org.springframework.util.backoff.FixedBackOff;
 
-import java.util.Arrays;
 import java.util.Collections;
 
 @Configuration
 @EnableKafka
 @Slf4j
+@RequiredArgsConstructor
 public class LibraryEventsConsumerConfig {
+
+    private final KafkaTemplate<Long, String> kafkaTemplate;
+
+    @Value("${topics.retry}")
+    private String retryTopic;
+
+    @Value("${topics.dlt}")
+    private String deadLetterTopic;
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<?, ?> kafkaListenerContainerFactory(
@@ -41,10 +53,10 @@ public class LibraryEventsConsumerConfig {
 //		exponentialBackOffWithMaxRetries.setMultiplier(2.0);
 //		exponentialBackOffWithMaxRetries.setMaxInterval(2_000L);
 
-		DefaultErrorHandler errorHandler = new DefaultErrorHandler(fixedBackOff);
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(publishingRecoverer(), fixedBackOff);
 
-		Collections.singletonList(IllegalArgumentException.class)
-				.forEach(errorHandler::addNotRetryableExceptions);
+        Collections.singletonList(IllegalArgumentException.class)
+                .forEach(errorHandler::addNotRetryableExceptions);
 
 //		Collections.singletonList(RecoverableDataAccessException.class)
 //				.forEach(errorHandler::addRetryableExceptions);
@@ -52,6 +64,16 @@ public class LibraryEventsConsumerConfig {
         errorHandler.setRetryListeners((record, ex, deliveryAttempt)
                 -> log.info("Failed record in RetryListener, Exception: {}, deliveryAttempt: {}", ex.getMessage(), deliveryAttempt));
         return errorHandler;
+    }
+
+    public DeadLetterPublishingRecoverer publishingRecoverer() {
+        return new DeadLetterPublishingRecoverer(kafkaTemplate, (r, e) -> {
+            if (e.getCause() instanceof RecoverableDataAccessException) {
+                return new TopicPartition(retryTopic, r.partition());
+            } else {
+                return new TopicPartition(deadLetterTopic, r.partition());
+            }
+        });
     }
 
 }
