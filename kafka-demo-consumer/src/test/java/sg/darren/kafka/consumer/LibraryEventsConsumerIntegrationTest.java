@@ -28,6 +28,7 @@ import sg.darren.kafka.entity.Book;
 import sg.darren.kafka.entity.LibraryEvent;
 import sg.darren.kafka.entity.LibraryEventType;
 import sg.darren.kafka.repository.LibraryEventsRepository;
+import sg.darren.kafka.repository.RecoverableRecordRepository;
 import sg.darren.kafka.service.LibraryEventsService;
 
 import java.util.HashMap;
@@ -69,6 +70,9 @@ class LibraryEventsConsumerIntegrationTest {
     @Autowired
     LibraryEventsRepository libraryEventsRepository;
 
+    @Autowired
+    RecoverableRecordRepository recoverableRecordRepository;
+
     @Value("${topics.retry}")
     String retryTopic;
 
@@ -76,7 +80,6 @@ class LibraryEventsConsumerIntegrationTest {
     String deadLetterTopic;
 
     Consumer<Long, String> consumer;
-
 
     @BeforeEach
     void setUp() {
@@ -93,6 +96,7 @@ class LibraryEventsConsumerIntegrationTest {
     @AfterEach
     void tearDown() {
         libraryEventsRepository.deleteAll();
+        recoverableRecordRepository.deleteAll();
     }
 
     @Test
@@ -195,6 +199,36 @@ class LibraryEventsConsumerIntegrationTest {
 
         ConsumerRecord<Long, String> cr = KafkaTestUtils.getSingleRecord(consumer, deadLetterTopic);
         Assertions.assertTrue(cr.value().contains("Kafka Crash Course"));
+    }
+
+    @Test
+    void updateLibraryEvent_null_LibraryEventId_SaveRecoverableRecord() throws ExecutionException, InterruptedException, JsonProcessingException {
+        // given
+        Book b = Book.builder()
+                .id(Long.parseLong("1"))
+                .name("Kafka Crash Course")
+                .author("Udemy")
+                .build();
+        LibraryEvent le = LibraryEvent.builder()
+                .id(null)
+                .libraryEventType(LibraryEventType.UPDATE)
+                .book(b)
+                .build();
+        String json = objectMapper.writeValueAsString(le);
+        kafkaTemplate.sendDefault(json).get();
+
+        // when
+        CountDownLatch latch = new CountDownLatch(1);
+        latch.await(5, TimeUnit.SECONDS);
+
+        // then
+        Mockito.verify(libraryEventsConsumer, Mockito.times(1))
+                .onMessage(Mockito.isA(ConsumerRecord.class));
+        Mockito.verify(libraryEventsService, Mockito.times(1))
+                .processLibraryEvent(Mockito.isA(ConsumerRecord.class));
+
+        Assertions.assertEquals(1, recoverableRecordRepository.count());
+        recoverableRecordRepository.findAll().forEach(System.out::println);
     }
 
     @Test
