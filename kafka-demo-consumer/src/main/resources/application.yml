@@ -34,13 +34,38 @@ spring:
       enabled: true
 ---
 spring:
-  profiles: dev
+  profiles: local-ssl
   kafka:
+    template:
+      default-topic: library-events
     consumer:
-      bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
+      bootstrap-servers: localhost:9095
       key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       group-id: library-events-listener-group
+      ssl:
+        trust-store-location: file:C:/kafka/client.truststore.jks
+        trust-store-password: password
+        key-store-location: file:C:/kafka/client.keystore.jks
+        key-store-password: password
+    producer:
+      bootstrap-servers: localhost:9095
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    properties:
+      security:
+        protocol: SSL
+      ssl.endpoint.identification.algorithm:
+  datasource:
+    url: jdbc:h2:mem:demo
+    driver: org.h2.Driver
+  jpa:
+    database: h2
+    database-platform: org.hibernate.dialect.H2Dialect
+    generate-ddl: true
+  h2:
+    console:
+      enabled: true
 ---
 spring:
   profiles: prod
