@@ -187,6 +187,14 @@ class LibraryEventsConsumerIntegrationTest {
                 .onMessage(Mockito.isA(ConsumerRecord.class));
         Mockito.verify(libraryEventsService, Mockito.times(1))
                 .processLibraryEvent(Mockito.isA(ConsumerRecord.class));
+
+        // Dead Letter
+        Map<String, Object> configs = new HashMap<>(KafkaTestUtils.consumerProps("group-1", "true", embeddedKafkaBroker));
+        consumer = new DefaultKafkaConsumerFactory<Long, String>(configs, new LongDeserializer(), new StringDeserializer()).createConsumer();
+        embeddedKafkaBroker.consumeFromAnEmbeddedTopic(consumer, deadLetterTopic);
+
+        ConsumerRecord<Long, String> cr = KafkaTestUtils.getSingleRecord(consumer, deadLetterTopic);
+        Assertions.assertTrue(cr.value().contains("Kafka Crash Course"));
     }
 
     @Test
@@ -216,7 +224,7 @@ class LibraryEventsConsumerIntegrationTest {
                 .processLibraryEvent(Mockito.isA(ConsumerRecord.class));
 
         // RETRY
-        Map<String, Object> configs = new HashMap<>(KafkaTestUtils.consumerProps("group-1", "true", embeddedKafkaBroker));
+        Map<String, Object> configs = new HashMap<>(KafkaTestUtils.consumerProps("group-2", "true", embeddedKafkaBroker));
         consumer = new DefaultKafkaConsumerFactory<Long, String>(configs, new LongDeserializer(), new StringDeserializer()).createConsumer();
         embeddedKafkaBroker.consumeFromAnEmbeddedTopic(consumer, retryTopic);
 
