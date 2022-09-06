@@ -31,7 +31,7 @@ public class RecoverableRecord {
 
     private String exception;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     private RecoverableStatus status;
 
 }

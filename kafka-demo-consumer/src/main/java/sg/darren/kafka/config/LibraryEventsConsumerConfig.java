@@ -61,8 +61,8 @@ public class LibraryEventsConsumerConfig {
 //		exponentialBackOffWithMaxRetries.setMaxInterval(2_000L);
 
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(
-                publishingRecoverer(),
-//                consumerRecordRecoverer,
+//                publishingRecoverer(),
+                consumerRecordRecoverer,
                 fixedBackOff
         );
 
@@ -81,8 +81,10 @@ public class LibraryEventsConsumerConfig {
         return new DeadLetterPublishingRecoverer(kafkaTemplate, (r, e) -> {
             log.error("### Exception in publishingRecoverer(): {}", e.getMessage());
             if (e.getCause() instanceof RecoverableDataAccessException) {
+                log.error("### RecoverableDataAccessException");
                 return new TopicPartition(retryTopic, r.partition());
             } else {
+                log.error("### Other exceptions");
                 return new TopicPartition(deadLetterTopic, r.partition());
             }
         });
@@ -91,8 +93,10 @@ public class LibraryEventsConsumerConfig {
     private ConsumerRecordRecoverer consumerRecordRecoverer = (consumerRecord, e) -> {
         log.error("### Exception in consumerRecordRecoverer(): {}", e.getMessage());
         if (e.getCause() instanceof RecoverableDataAccessException) {
+            log.error("### Recoverable error");
             recoverableRecordService.saveRecoverableRecord((ConsumerRecord<Long, String>) consumerRecord, e, RecoverableStatus.RETRY);
         } else {
+            log.error("### Non recoverable error");
             recoverableRecordService.saveRecoverableRecord((ConsumerRecord<Long, String>) consumerRecord, e, RecoverableStatus.NO_RETRY);
         }
     };
