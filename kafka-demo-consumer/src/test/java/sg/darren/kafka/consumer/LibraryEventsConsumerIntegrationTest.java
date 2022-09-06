@@ -33,14 +33,19 @@ import sg.darren.kafka.service.LibraryEventsService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @SpringBootTest
 @EmbeddedKafka(topics = {"${topics.main}", "${topics.retry}", "${topics.dlt}"}, partitions = 3)
-@TestPropertySource(properties = {"spring.kafka.producer.bootstrap-servers=${spring.embedded.kafka.brokers}",
-        "spring.kafka.consumer.bootstrap-servers=${spring.embedded.kafka.brokers}"})
+@TestPropertySource(properties = {
+        "spring.kafka.producer.bootstrap-servers=${spring.embedded.kafka.brokers}",
+        "spring.kafka.consumer.bootstrap-servers=${spring.embedded.kafka.brokers}",
+        "retryListener.startup=false"
+})
 class LibraryEventsConsumerIntegrationTest {
 
     @Autowired
@@ -75,9 +80,14 @@ class LibraryEventsConsumerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        for (MessageListenerContainer messageListenerContainer : kafkaListenerEndpointRegistry.getAllListenerContainers()) {
-            ContainerTestUtils.waitForAssignment(messageListenerContainer, embeddedKafkaBroker.getPartitionsPerTopic());
-        }
+        // Wait for all listeners up
+//        for (MessageListenerContainer messageListenerContainer : kafkaListenerEndpointRegistry.getAllListenerContainers()) {
+//            ContainerTestUtils.waitForAssignment(messageListenerContainer, embeddedKafkaBroker.getPartitionsPerTopic());
+//        }
+        MessageListenerContainer mlc = kafkaListenerEndpointRegistry.getAllListenerContainers()
+                .stream().filter(c -> Objects.requireNonNull(c.getGroupId()).equalsIgnoreCase("library-events-listener-group"))
+                .collect(Collectors.toList()).get(0);
+        ContainerTestUtils.waitForAssignment(mlc, embeddedKafkaBroker.getPartitionsPerTopic());
     }
 
     @AfterEach
