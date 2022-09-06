@@ -6,14 +6,14 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.stereotype.Service;
 import sg.darren.kafka.entity.RecoverableStatus;
 import sg.darren.kafka.entity.RecoverableRecord;
-import sg.darren.kafka.repository.FailureRecordRepository;
+import sg.darren.kafka.repository.RecoverableRecordRepository;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class RecoverableRecordService {
 
-    private final FailureRecordRepository failureRecordRepository;
+    private final RecoverableRecordRepository recoverableRecordRepository;
 
     public void saveRecoverableRecord(ConsumerRecord<Long, String> consumerRecord, Exception ex, RecoverableStatus status) {
         RecoverableRecord rr = RecoverableRecord.builder()
@@ -22,11 +22,11 @@ public class RecoverableRecordService {
                 .key(consumerRecord.key())
                 .value(consumerRecord.value())
                 .partition(consumerRecord.partition())
-                .offset(consumerRecord.offset())
+                .offsetValue(consumerRecord.offset())
                 .exception(ex.getCause().getMessage())
                 .status(status)
                 .build();
-        failureRecordRepository.save(rr);
+        recoverableRecordRepository.save(rr);
         log.info("Saved RecoverableRecord with status {}: {}", status, rr);
     }
 }

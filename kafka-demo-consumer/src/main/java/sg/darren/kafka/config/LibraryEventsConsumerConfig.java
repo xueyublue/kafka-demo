@@ -61,8 +61,8 @@ public class LibraryEventsConsumerConfig {
 //		exponentialBackOffWithMaxRetries.setMaxInterval(2_000L);
 
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(
-//                publishingRecoverer(),
-                consumerRecordRecoverer,
+//                publishingRecoverer(),    // save failed messages to different topics
+                consumerRecordRecoverer,    // save failed messages to database
                 fixedBackOff
         );
 
@@ -90,14 +90,15 @@ public class LibraryEventsConsumerConfig {
         });
     }
 
-    private ConsumerRecordRecoverer consumerRecordRecoverer = (consumerRecord, e) -> {
-        log.error("### Exception in consumerRecordRecoverer(): {}", e.getMessage());
-        if (e.getCause() instanceof RecoverableDataAccessException) {
+    private ConsumerRecordRecoverer consumerRecordRecoverer = (consumerRecord, ex) -> {
+        log.error("### Exception in consumerRecordRecoverer(): {}", ex.getMessage());
+        ConsumerRecord<Long, String> cr = (ConsumerRecord<Long, String>) consumerRecord;
+        if (ex.getCause() instanceof RecoverableDataAccessException) {
             log.error("### Recoverable error");
-            recoverableRecordService.saveRecoverableRecord((ConsumerRecord<Long, String>) consumerRecord, e, RecoverableStatus.RETRY);
+            recoverableRecordService.saveRecoverableRecord(cr, ex, RecoverableStatus.RETRY);
         } else {
             log.error("### Non recoverable error");
-            recoverableRecordService.saveRecoverableRecord((ConsumerRecord<Long, String>) consumerRecord, e, RecoverableStatus.NO_RETRY);
+            recoverableRecordService.saveRecoverableRecord(cr, ex, RecoverableStatus.NO_RETRY);
         }
     };
 

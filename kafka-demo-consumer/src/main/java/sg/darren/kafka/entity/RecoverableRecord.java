@@ -26,8 +26,7 @@ public class RecoverableRecord {
 
     private Integer partition;
 
-    @Column(name = "offset")
-    private Long offset;
+    private Long offsetValue;
 
     private String exception;
 

@@ -5,6 +5,6 @@ import org.springframework.stereotype.Repository;
 import sg.darren.kafka.entity.RecoverableRecord;
 
 @Repository
-public interface FailureRecordRepository extends CrudRepository<RecoverableRecord, Long> {
+public interface RecoverableRecordRepository extends CrudRepository<RecoverableRecord, Long> {
 
 }
